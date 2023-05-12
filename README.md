@@ -6,17 +6,17 @@ Téléchargez et installez Python,  assurez-vous de cocher la case Ajouter Pytho
 
  
 ### Installation
-Accédez au répertoire de votre projet actuel dans ce cas, ce sera **BK-Manager**. <br>
+Accédez au répertoire de votre projet actuel dans ce cas, ce sera **BK_Manager**. <br>
 
 ### 1 .Cloner le fichier dans votre machine locale
 ```
-git clone https://github.com/LoonaAK/BK-Manager.git
+git clone https://github.com/LoonaAK/BK_Manager.git
 ```
           
 ### 2 .Créer un environnement
           
 ```
-cd BK-Manager
+cd BK_Manager
 py -3 -m venv venv
 
 ```
