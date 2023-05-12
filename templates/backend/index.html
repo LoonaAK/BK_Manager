@@ -1,0 +1,254 @@
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>BK Manager | Projets</title>
+      
+      <!-- Favicon -->
+      <link rel="shortcut icon" href="../assets/images/favicon.ico" />
+      <link rel="stylesheet" href="../assets/css/backend-plugin.min.css">
+      <link rel="stylesheet" href="../assets/css/backend.css?v=1.0.0">
+      <link rel="stylesheet" href="../assets/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css">
+      <link rel="stylesheet" href="../assets/vendor/remixicon/fonts/remixicon.css">
+      
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css">  </head>
+  <body class="  ">
+    <!-- loader Start -->
+    <div id="loading">
+          <div id="loading-center">
+          </div>
+    </div>
+    <!-- loader END -->
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+        {% include "includes/nav-col.html" %}
+        {% include "includes/nav-top.html" %}
+    <div class="content-page">
+     <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% include "includes/alert.html" %}
+                        <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
+                            <h5>Projet en cours</h5>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                <div class="list-grid-toggle d-flex align-items-center mr-3">
+                                    <div data-toggle-extra="tab" data-target-extra="#grid" class="active">
+                                        <div class="grid-icon mr-3">
+                                            <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div data-toggle-extra="tab" data-target-extra="#list">
+                                        <div class="grid-icon">
+                                            <svg  width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                {%if session['groupe'] == 'Directeur'%}
+                                <div class="pl-3 border-left btn-new">
+                                    <a href="#" class="btn btn-primary" data-target="#new-project-modal" data-toggle="modal">Nouveau projet</a>
+                                </div>
+                                {%endif%}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="grid" class="item-content animate__animated animate__fadeIn active" data-toggle-extra="tab-content">
+            <div class="row">
+                {%for x in l_projet_1%}
+                {%if session['groupe'] == 'Directeur'%}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                            </div>
+                            <h5 class="mb-1">{{ x.nom }}</h5>
+                            <p class="mb-1">Catégorie : {{ x.categorie }}</p>
+                            <p class="mb-3">Échéance : {{ x.date_fin }}</p>
+                            <p class="mb-3">{{ x.description }}</p>
+                            <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                                <h5 class="mb-1">ID : {{ x.id }}</h5>
+                                <a class="btn btn-white text-primary link-shadow" href="{{ url_for('projet', projet_id=x.id) }}">Voir plus</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {%elif session['categorie'] == x.categorie%}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                            </div>
+                            <h5 class="mb-1">{{ x.nom }}</h5>
+                            <p class="mb-1">Catégorie : {{ x.categorie }}</p>
+                            <p class="mb-3">Échéance : {{ x.date_fin }}</p>
+                            <p class="mb-3">{{ x.description }}</p>
+                            <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                                <h5 class="mb-1">ID : {{ x.id }}</h5>
+                                <a class="btn btn-white text-primary link-shadow" href="{{ url_for('projet', projet_id=x.id) }}">Voir plus</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {%else%}
+                {%endif%}
+                {%endfor%}
+            </div>
+        </div>
+        <div id="list" class="item-content animate__animated animate__fadeIn" data-toggle-extra="tab-content">
+            <div class="row">
+                {%for x in l_projet_1%}
+                {%if session['groupe'] == 'Directeur'%}
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ml-3">
+                                            <h5 class="mb-1"><font size="5pt">ID : {{ x.id }} </font>| {{ x.nom }}</h5>
+                                            <p class="mb-0">{{ x.description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
+                                    <a class="btn btn-white text-primary link-shadow" href="{{ url_for('projet', projet_id=x.id) }}">Voir plus</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {%elif session['categorie'] == x.categorie%}
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ml-3">
+                                            <h5 class="mb-1"><font size="5pt">ID : {{ x.id }} </font>| {{ x.nom }}</h5>
+                                            <p class="mb-0">{{ x.description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
+                                    <a class="btn btn-white text-primary link-shadow" href="{{ url_for('projet', projet_id=x.id) }}">Voir plus</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {%else%}
+                {%endif%}
+                {%endfor%}
+            </div>
+        </div>
+        <!-- Page end  -->
+    </div>
+      </div>
+    </div>
+    <!-- Wrapper End-->
+
+    <!-- Modal list start -->
+    <form action="{{ url_for('ajout_projet') }}" method="post" enctype="multipart/form-data">
+        <div class="modal fade" role="dialog" aria-modal="true" id="new-project-modal">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header d-block text-center pb-3 border-bttom">
+                        <h3 class="modal-title" id="exampleModalCenterTitle01">Nouveau projet</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="form-group mb-3">
+                                    <label class="h5">Nom du projet *</label>
+                                    <input type="text" class="form-control" id="projet" name="projet" placeholder="Nom du projet">
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-3">
+                                    <label class="h5">Description *</label>
+                                    <textarea type="text" class="form-control" id="description" name="description" rows="3" placeholder="Description"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group mb-3">
+                                    <label class="h5">Catégorie *</label>
+                                    <select class="selectpicker form-control" id="cat_pick" name="cat_pick" data-style="py-0">
+                                        <option value="choix">Choix</option>
+                                        {%for y in categories%}
+                                        <option value="{{y.nom}}">{{y.nom}}</option>
+                                        {%endfor%}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="form-group mb-3">
+                                    <label  class="h5">Échéance *</label>
+                                    <input type="date" class="form-control" name="echeance" id="echeance" value="">
+                                </div>                        
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-3">
+                                    <label class="h5">Budget *</label>
+                                    <input type="number" class="form-control" id="budget" name="budget" placeholder="Budget en €">
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="d-flex flex-wrap align-items-ceter justify-content-center mt-2">
+                                    <button class="btn btn-primary mr-3" type="submit">Sauvegarder</button>
+                                    <div class="btn btn-primary" data-dismiss="modal">Annuler</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>    
+    <footer class="iq-footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="../backend/privacy-policy.html">Privacy Policy</a></li>
+                        <li class="list-inline-item"><a href="../backend/terms-of-service.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-right">
+                    <span class="mr-1"><script>document.write(new Date().getFullYear())</script>©</span> <a href="#" class="">Webkit</a>.
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Backend Bundle JavaScript -->
+    <script src="../assets/js/backend-bundle.min.js"></script>
+    
+    <!-- Table Treeview JavaScript -->
+    <script src="../assets/js/table-treeview.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script src="../assets/js/customizer.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/chart-custom.js"></script>
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/slider.js"></script>
+    
+    <!-- app JavaScript -->
+    <script src="../assets/js/app.js"></script>
+    
+    <script src="../assets/vendor/moment.min.js"></script>
+  </body>
+</html>

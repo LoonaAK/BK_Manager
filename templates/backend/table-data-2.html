@@ -1,0 +1,189 @@
+
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>Webkit | Responsive Bootstrap 4 Admin Dashboard Template</title>
+      
+      <!-- Favicon -->
+      <link rel="shortcut icon" href="../assets/images/favicon.ico" />
+      <link rel="stylesheet" href="../assets/css/backend-plugin.min.css">
+      <link rel="stylesheet" href="../assets/css/backend.css?v=1.0.0">
+      <link rel="stylesheet" href="../assets/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css">
+      <link rel="stylesheet" href="../assets/vendor/remixicon/fonts/remixicon.css">
+      
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css">  </head>
+  <body class=" color-light ">
+    <!-- loader Start -->
+    <div id="loading">
+          <div id="loading-center">
+          </div>
+    </div>
+    <!-- loader END -->
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+        {% include "includes/nav-col.html" %}
+        {% include "includes/nav-top.html" %}
+             <div class="content-page">
+      <div class="container-fluid">
+         <div class="row">
+               <div class="col-lg-12">
+                   <div class="card">
+                       <div class="card-body">
+                           {% include "includes/alert.html" %}
+                           <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
+                               <h5>Informations sur les utilisateurs</h5>
+                               <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                {%if session['groupe'] == 'Directeur'%}
+                                   <div class="pl-3 border-left btn-new">
+                                       <a href="#" class="btn btn-primary" data-target="#new-task-modal" data-toggle="modal">Nouvelle taches</a>
+                                   </div>
+                                
+                                {%endif%}
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+            <div class="col-lg-12">
+                <div class="card">
+                   <div class="card-body">
+                      <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content"></div>
+                      <div class="table-responsive">
+                         <table id="datatable" class="table data-table table-striped">
+                            <thead>
+                               <tr class="ligth">
+                                <th>ID</th>
+                                <th>Description</th>
+                                <th>Groupe</th>
+                                <th>Projet</th>
+                                <th>Status</th>
+                                <th>Détail</th>
+                               </tr>
+                            </thead>
+                            <tbody>
+                                {%for x in tache%}
+                                <tr>
+                                   <td>{{ x.id }}</td>
+                                   <td>{{ x.description }}</td>
+                                   <td>{{ x.groupe }}</td>
+                                   <td>{{ x.projet }}</td>
+                                   <td>{{ x.status }}</td>
+                                   <td><a class="btn btn-primary mr-3" name="device_id" href="{{ url_for('projet', projet_id=x.id) }}">Voir</a></td>
+                                </tr>
+                                {%endfor%}
+                            </tbody>
+                            <tfoot>
+                               <tr>
+                                <th>ID</th>
+                                <th>Description</th>
+                                <th>Groupe</th>
+                                <th>Projet</th>
+                                <th>Détail</th>
+                               </tr>
+                            </tfoot>
+                         </table>
+                      </div>
+                   </div>
+                </div>
+             </div>
+         </div>
+         <form action="{{ url_for('ajout_tache') }}" method="post" enctype="multipart/form-data">
+         <div class="modal fade bd-example-modal-lg" role="dialog" aria-modal="true" id="new-task-modal">
+            <div class="modal-dialog  modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header d-block text-center pb-3 border-bttom">
+                        <h3 class="modal-title" id="exampleModalCenterTitle02">Nouvelle taches</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="form-group mb-3">
+                                    <label class="h5">Projet *</label>
+                                    <select class="selectpicker form-control" name="projet_pick" id="projet_pick" data-style="py-0">
+                                        <option value="choix">Choix</option>
+                                     {%for y in projets%}
+                                        <option value="{{ y.nom }}">{{ y.nom }}</option>
+                                        {%endfor%}
+                                    </select>
+                                  </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group mb-3">
+                                        <label class="h5">Groupe *</label>
+                                        <select class="selectpicker form-control" name="groupe_pick" id="groupe_pick" data-style="py-0">
+                                            <option value="choix">Choix</option>
+                                         {%for y in groupes%}
+                                            <option value="{{ y.nom }}">{{ y.nom }}</option>
+                                            {%endfor%}
+                                        </select>
+                                      </div>
+                                    </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-3">
+                                    <label for="exampleInputText40" class="h5">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Description"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-3">
+                                    <label for="exampleInputText40" class="h5">Date de réalisation théorique</label>
+                                    <input min="1" type="number" class="form-control" id="temps" name="temps" rows="1" placeholder="Temps néccesaire en JOUR"></input>
+                                </div>
+                            </div>
+                          </div>
+                            <div class="col-lg-12">
+                                <div class="d-flex flex-wrap align-items-ceter justify-content-center mt-2">
+                                    <button type="submit" class="btn btn-primary mr-3">Sauvegarder</button>
+                                    <div class="btn btn-primary" data-dismiss="modal">Annuler</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </form>
+      </div>
+      </div>
+    </div>
+    <!-- Wrapper End-->
+    <footer class="iq-footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="../backend/privacy-policy.html">Privacy Policy</a></li>
+                        <li class="list-inline-item"><a href="../backend/terms-of-service.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-right">
+                    <span class="mr-1"><script>document.write(new Date().getFullYear())</script>©</span> <a href="#" class="">Webkit</a>.
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Backend Bundle JavaScript -->
+    <script src="../assets/js/backend-bundle.min.js"></script>
+    
+    <!-- Table Treeview JavaScript -->
+    <script src="../assets/js/table-treeview.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script src="../assets/js/customizer.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/chart-custom.js"></script>
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/slider.js"></script>
+    
+    <!-- app JavaScript -->
+    <script src="../assets/js/app.js"></script>
+    
+    <script src="../assets/vendor/moment.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>BK Manager | Projet</title>
+      
+      <!-- Favicon -->
+      <link rel="shortcut icon" href="../assets/images/favicon.ico" />
+      <link rel="stylesheet" href="../assets/css/backend-plugin.min.css">
+      <link rel="stylesheet" href="../assets/css/backend.css?v=1.0.0">
+      <link rel="stylesheet" href="../assets/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css">
+      <link rel="stylesheet" href="../assets/vendor/remixicon/fonts/remixicon.css">
+      
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css">
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css">  </head>
+  <body class="  ">
+    <!-- loader Start -->
+    <div id="loading">
+          <div id="loading-center">
+          </div>
+    </div>
+    <!-- loader END -->
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+    <div style="padding: 30px; margin-top: 10px;">
+     <div class="container-fluid">
+        <div class="item-content animate__animated animate__fadeIn active">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ml-3">
+                                            <h5 class="mb-3"><font size="5pt">ID : {{ projet_info['id'] }} </font>| {{ projet_info['nom'] }}</h5>
+                                            <p class="mb-2">Budget restant : <b>{{ projet_info['budget'] }} €</b></p>
+                                            <p class="mb-2">Catégorie : <b>{{ projet_info['categorie'] }}</b></p>
+                                            <p class="mb-2">Temps moyen de réalisation : <b>{{ date_th_g }}</b></p>
+                                            <p class="mb-2">Fin du projet : <b>{{ date_fin }}</b></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
+                                    <div id="circle-progress-24" class="circle-progress-01 circle-progress circle-progress-primary" data-min-value="0" data-max-value="100" data-value="{{ tache_pourcent }}" data-type="percent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group mb-3">
+                                        <label class="h5">Description du projet</label>
+                                        <textarea disabled type="text" class="form-control" id="description" name="description" rows="10" placeholder="{{ projet_info['description'] }}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br><br>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% include "includes/alert.html" %}
+                        <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
+                            <h5>Informations sur les achats</h5>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         <div class="col-lg-12">
+             <div class="card">
+                <div class="card-body">
+                   <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content"></div>
+                   <div class="table-responsive">
+                      <table id="datatable" class="table data-table table-striped">
+                         <thead>
+                            <tr class="ligth">
+                             <th>ID</th>
+                             <th>Objet</th>
+                             <th>Prix</th>
+                            </tr>
+                         </thead>
+                         <tbody>
+                             {%for x in projet_achat%}
+                             <tr>
+                                <td>{{ x.id }}</td>
+                                <td>{{ x.objet }}</td>
+                                <td>{{ x.prix }} €</td>
+                             </tr>
+                             {%endfor%}
+                         </tbody>
+                         <tfoot>
+                            <tr>
+                                <th>ID</th>
+                                <th>Objet</th>
+                                <th>Prix</th>
+                            </tr>
+                         </tfoot>
+                      </table>
+                   </div>
+                </div>
+             </div>
+          </div>
+      </div>
+      <br>
+      <br>
+      <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    {% include "includes/alert.html" %}
+                    <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
+                        <h5>Informations sur les taches</h5>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <div class="col-lg-12">
+         <div class="card">
+            <div class="card-body">
+               <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content"></div>
+               <div class="table-responsive">
+                  <table id="datatable" class="table data-table table-striped">
+                     <thead>
+                        <tr class="ligth">
+                         <th>ID</th>
+                         <th>Description</th>
+                         <th>Groupe</th>
+                         <th>Temps requis ( Jour )</th>
+                         <th>Status</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                         {%for y in projet_tache%}
+                         <tr>
+                            <td>{{ y.id }}</td>
+                            <td>{{ y.description }}</td>
+                            <td>{{ y.groupe }}</td>
+                            <td>{{ y.temps }} Jour</td>
+                            <td>{{ y.status }}</td>
+                         </tr>
+                         {%endfor%}
+                     </tbody>
+                     <tfoot>
+                        <tr>
+                            <th>ID</th>
+                         <th>Description</th>
+                         <th>Groupe</th>
+                         <th>Temps requis ( Jour )</th>
+                         <th>Status</th>
+                        </tr>
+                     </tfoot>
+                  </table>
+               </div>
+            </div>
+         </div>
+      </div>
+  </div>
+        <!-- Page end  -->
+    </div>
+      </div>
+    </div>
+    <!-- Wrapper End--> 
+    <!-- Backend Bundle JavaScript -->
+    <script src="../assets/js/backend-bundle.min.js"></script>
+    
+    <!-- Table Treeview JavaScript -->
+    <script src="../assets/js/table-treeview.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script src="../assets/js/customizer.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/chart-custom.js"></script>
+    <!-- Chart Custom JavaScript -->
+    <script async src="../assets/js/slider.js"></script>
+    
+    <!-- app JavaScript -->
+    <script src="../assets/js/app.js"></script>
+    
+    <script src="../assets/vendor/moment.min.js"></script>
+  </body>
+</html>
