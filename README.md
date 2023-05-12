@@ -18,7 +18,6 @@ git clone https://github.com/LoonaAK/BK_Manager.git
 ```
 cd BK_Manager
 py -3 -m venv venv
-
 ```
 
 ### 3. Activer l'environnement
@@ -43,5 +42,4 @@ app.config['MYSQL_DB'] = ''
 
 ```
 flask run
-
 ```
