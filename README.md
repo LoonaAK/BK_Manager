@@ -21,14 +21,24 @@ py -3 -m venv venv
 
 ```
 
-### 3 .Activer l'environnement
+### 3. Activer l'environnement
 
 ```venv\Scripts\activate```
 
-### 4 .Installez les exigences
+### 4. Installez les exigences
 
 ```pip install -r requirements.txt```
   
+### 5. Installez les exigences
+
+> Configuration de la base de donnée dans le fichier app.py
+```
+app.config['MYSQL_HOST'] = ''
+app.config['MYSQL_USER'] = ''
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB'] = ''
+```
+
 ### 5. Run the application 
 
 ```
