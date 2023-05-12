@@ -4,10 +4,10 @@ import pymysql as MySQLdb# nous importons le paquet Python capable d'interagir a
 import hashlib #pour hasher le mdp en md5
 
 
-hostname = '141.94.37.252' #Hôte de la base de donnée
-username = 'bleona_db' #Utilisateur de la base de donnée
-password = '1Xayt12_4' #Mot de passe de la base de donnée
-database = 'bleona' #Nom de la base de donnée
+hostname = '' #Hôte de la base de donnée
+username = '' #Utilisateur de la base de donnée
+password = '' #Mot de passe de la base de donnée
+database = '' #Nom de la base de donnée
 db_conn = MySQLdb.connect( host=hostname, user=username, passwd=password, db=database ) #Créer la connexion
 db_cur = db_conn.cursor() #cursor pour pour les lignes
 

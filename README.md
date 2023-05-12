@@ -38,6 +38,18 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = ''
 ```
 
+> Configuration de la base de donnée dans le fichier db.py
+```
+MYSQL_HOST = ''
+MYSQL_USER = ''
+MYSQL_PASSWORD = ''
+MYSQL_DB = ''
+```
+
+Ainsi que lancer le fichier db.py afin de mettre en route la base de données
+```python db.py```
+
+
 ### 5. Run the application 
 
 ```
