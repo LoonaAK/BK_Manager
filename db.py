@@ -35,7 +35,18 @@ def create_tables():
     # Définition de la requête SQL pour créer la table "tache"
     cursor.execute("CREATE TABLE tache (id INT AUTO_INCREMENT PRIMARY KEY, description TEXT, groupe TEXT, projet TEXT, temps INT, status TEXT)")
 
+    # Définition de la requête SQL pour créer la catégorie de base "Administration"
+    cursor.execute('INSERT INTO categories VALUES (NULL, %s)', ["Administration"])
+
+    # Définition de la requête SQL pour créer le groupe de base "Directeur"
+    cursor.execute('INSERT INTO groupe VALUES (NULL, %s, %s)', ["Directeur", "Administration"])
+
+    # Définition de la requête SQL pour créer l'utilisateur de base "admin"
+    cursor.execute('INSERT INTO clients VALUES (NULL, %s, %s, %s, %s, %s, %s, %s)', ["admin", "admin", "admin", "admin@votreemail.com", "0000000000", "admin", "Directeur"])
+
+
     # Fermeture du curseur et de la connexion
+    connection.commit()
     cursor.close()
     connection.close()
 
