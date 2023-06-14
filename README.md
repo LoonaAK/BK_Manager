@@ -1,4 +1,4 @@
-## BK-Manager le gestionnaire de portefeuille fait pour vous !
+## BK-Manager le gestionnaire de projets fait pour vous !
 
 ### Exigences (minimales)
 
