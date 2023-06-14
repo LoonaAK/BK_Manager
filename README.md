@@ -50,7 +50,7 @@ Ainsi que lancer le fichier db.py afin de mettre en route la base de données
 ```python db.py```
 
 
-### 6. Run the application 
+### 6. Lancer l'application
 
 ```
 flask run
