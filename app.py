@@ -23,10 +23,10 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 app.secret_key = '1a2b3c4d5e'
 
 # Configurer les informations de connexion à la base de données MySQL
-app.config['MYSQL_HOST'] = '141.94.37.252'
-app.config['MYSQL_USER'] = 'bleona_db'
-app.config['MYSQL_PASSWORD'] = '1Xayt12_4'
-app.config['MYSQL_DB'] = 'bleona'
+app.config['MYSQL_HOST'] = ''
+app.config['MYSQL_USER'] = ''
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB'] = ''
 
 # Initialiser le module Flask-MySQL avec les configurations de l'application Flask
 mysql = MySQL(app)
