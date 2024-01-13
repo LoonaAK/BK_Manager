@@ -1,4 +1,4 @@
-## BK-Manager le gestionnaire de portefeuille fait pour vous !
+## BK-Manager le gestionnaire de projets fait pour vous !
 
 ### Exigences (minimales)
 
@@ -28,7 +28,7 @@ py -3 -m venv venv
 
 ```pip install -r requirements.txt```
   
-### 5. Installez les exigences
+### 5. Configuration de l'application
 
 > Configuration de la base de donnée dans le fichier app.py
 ```
@@ -50,7 +50,7 @@ Ainsi que lancer le fichier db.py afin de mettre en route la base de données
 ```python db.py```
 
 
-### 5. Run the application 
+### 6. Lancer l'application
 
 ```
 flask run
