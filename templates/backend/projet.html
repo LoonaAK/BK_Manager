@@ -30,6 +30,7 @@
     <div class="content-page">
      <div class="container-fluid">
         <div class="item-content animate__animated animate__fadeIn active">
+            {% include "includes/alert.html" %}
             <div class="row">
                 <div class="col-lg-6">
                     <div class="card">
@@ -70,6 +71,43 @@
                             
                         </div>
                     </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ml-3">
+                                            <p class="mb-2">Supprimer le projet<br><b>Attention ceci est une action irréversible.</b></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
+                                    <form action="{{ url_for('suppresion', objet_type='Projet', objet_id=projet_info['id']) }}" method="post" enctype="multipart/form-data">
+                                        <div class="modal fade" role="dialog" aria-modal="true" id="supp-modal">
+                                            <div class="modal-dialog  modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header d-block text-center pb-3 border-bttom">
+                                                        <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sur de vouloir supprimer le projet ?</h3>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <div class="col-lg-12">
+                                                                <div class="d-flex flex-wrap align-items-ceter justify-content-center mt-2">
+                                                                    <button class="btn btn-primary mr-3" type="submit">Supprimer</button>
+                                                                    <div class="btn btn-primary" data-dismiss="modal">Annuler</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <a href="#" class="btn btn-primary" data-target="#supp-modal" data-toggle="modal">Supprimer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="card">
@@ -92,7 +130,6 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        {% include "includes/alert.html" %}
                         <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
                             <h5>Informations sur les achats</h5>
                             <div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -145,7 +182,6 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    {% include "includes/alert.html" %}
                     <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
                         <h5>Informations sur les taches</h5>
                         <div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -168,6 +204,7 @@
                          <th>Temps requis ( Jour )</th>
                          <th>Status</th>
                          <th></th>
+                         <th></th>
                         </tr>
                      </thead>
                      <tbody>
@@ -176,7 +213,11 @@
                             <td>{{ y.id }}</td>
                             <td>{{ y.description }}</td>
                             <td>{{ y.groupe }}</td>
+                            {%if y.temps > 1%}
+                            <td>{{ y.temps }} Jours</td>
+                            {%else%}
                             <td>{{ y.temps }} Jour</td>
+                            {%endif%}
                             <form action="{{ url_for('change_status', tache_id=y.id) }}" method="post" enctype="multipart/form-data">
                             <td><select class="selectpicker form-control" id="status" name="status" data-style="py-0">
                                 {%if y.status == "En attente"%}
@@ -191,6 +232,28 @@
                                 {%endif%}
                             </select></td>
                             <td><button class="btn btn-primary mr-3" type="submit">Enregistrer</button></td></form>
+                            <td>
+                                <div class="modal fade" role="dialog" aria-modal="true" id="supp-tache-modal-{{ y.id }}">
+                                    <div class="modal-dialog  modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header d-block text-center pb-3 border-bttom">
+                                                <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sur de vouloir supprimer la tâche ?{{ y.id }}</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-lg-12">
+                                                        <div class="d-flex flex-wrap align-items-ceter justify-content-center mt-2">
+                                                            <a class="btn btn-primary mr-3" href="{{ url_for('suppresion', objet_type='Tâche', objet_id=y.id, projet_id=projet_info['id']) }}">Supprimer</a>
+                                                            <div class="btn btn-primary" data-dismiss="modal">Annuler</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <a href="#" class="btn btn-primary" data-target="#supp-tache-modal-{{ y.id }}" data-toggle="modal">Supprimer</a></td>
                          </tr>
                          {%endfor%}
                      </tbody>
@@ -201,6 +264,7 @@
                          <th>Groupe</th>
                          <th>Temps requis ( Jour )</th>
                          <th>Status</th>
+                         <th></th>
                          <th></th>
                         </tr>
                      </tfoot>

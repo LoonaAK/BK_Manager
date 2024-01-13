@@ -23,10 +23,10 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 app.secret_key = '1a2b3c4d5e'
 
 # Configurer les informations de connexion à la base de données MySQL
-app.config['MYSQL_HOST'] = ''
-app.config['MYSQL_USER'] = ''
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = ''
+app.config['MYSQL_HOST'] = '141.94.37.252'
+app.config['MYSQL_USER'] = 'bleona_db'
+app.config['MYSQL_PASSWORD'] = '1Xayt12_4'
+app.config['MYSQL_DB'] = 'bleona'
 
 # Initialiser le module Flask-MySQL avec les configurations de l'application Flask
 mysql = MySQL(app)
@@ -228,8 +228,10 @@ def nfc():
             tache_fini += 1
         
     # Calculer le pourcentage de tâches finies
-    tache_pourcent = (tache_fini / tache_total) * 100
-    print(tache_pourcent)
+    try:
+        tache_pourcent = (tache_fini / tache_total) * 100
+    except :
+       tache_pourcent = 0 
 
     # Formater la date de fin du projet et la date théorique de fin du projet pour l'affichage
     date_fin = projet_info['date_fin'].strftime("%d/%m/%Y")
@@ -428,9 +430,13 @@ def ajout_tache():
 
             # Si toutes les vérifications sont validées, insertion des données dans la base de données
             else:
-
+                # Récupération des données de la table groupe
                 cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-                cursor.execute('INSERT INTO tache VALUES (NULL, %s, %s, %s, %s, %s)', [description, groupe_pick, projet_pick, temps, "En attente"])
+                cursor.execute('SELECT * FROM projet WHERE nom = %s', [projet_pick])
+                projet_id = cursor.fetchone()
+                
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                cursor.execute('INSERT INTO tache VALUES (NULL, %s, %s, %s, %s, %s, %s)', [description, groupe_pick, projet_pick, projet_id["id"], temps, "En attente"])
                 mysql.connection.commit()
                 
                 flash("Taches ajouter ", "success")
@@ -900,7 +906,44 @@ def ajout_utilisateur():
             flash("Merci de completer le formulaire!", "danger")
     
     # Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
-    return redirect(url_for('login')) 
+    return redirect(url_for('login'))
+
+@app.route('/suppresion', methods=['GET', 'POST'])
+def suppresion():
+    objet_id = request.args.get("objet_id")
+    objet_type = request.args.get("objet_type")
+    if session['loggedin'] == True:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if objet_type == "Projet":
+            cursor.execute('DELETE FROM projet WHERE id = %s', [objet_id])
+            mysql.connection.commit()
+            flash("Projet ID : "+ objet_id +" supprimer avec succès", "success")
+            return redirect(url_for('projets'))
+        elif objet_type == "Utilisateur":
+            cursor.execute('DELETE FROM clients WHERE id = %s', [objet_id])
+            mysql.connection.commit()
+            flash("Utilisateur ID : "+ objet_id +" supprimer avec succès", "success")
+            return redirect(url_for('profiles'))
+        elif objet_type == "Tâche":
+            projet_id = request.args.get("projet_id")
+            cursor.execute('DELETE FROM tache WHERE id = %s', [objet_id])
+            mysql.connection.commit()
+            flash("Tâche ID : "+ objet_id +" supprimer avec succès", "success")
+            return redirect(url_for('projet', projet_id=projet_id))
+        elif objet_type == "Groupe":
+            cursor.execute('DELETE FROM groupe WHERE id = %s', [objet_id])
+            mysql.connection.commit()
+            flash("Groupe ID : "+ objet_id +" supprimer avec succès", "success")
+            return redirect(url_for('groupes'))
+        elif objet_type == "Catégorie":
+            cursor.execute('DELETE FROM categories WHERE id = %s', [objet_id])
+            mysql.connection.commit()
+            flash("Catégorie ID : "+ objet_id +" supprimer avec succès", "success")
+            return redirect(url_for('categories'))
+        else:
+            pass
+            
+    return redirect(url_for('login'))
  
 # Définition de la route pour se déconnecté
 @app.route('/deconnexion')

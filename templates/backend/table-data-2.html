@@ -36,7 +36,7 @@
                        <div class="card-body">
                            {% include "includes/alert.html" %}
                            <div class="d-flex flex-wrap align-items-center justify-content-between breadcrumb-content">
-                               <h5>Informations sur les utilisateurs</h5>
+                               <h5>Informations sur les tâches</h5>
                                <div class="d-flex flex-wrap align-items-center justify-content-between">
                                 {%if session['groupe'] == 'Directeur'%}
                                    <div class="pl-3 border-left btn-new">
@@ -73,7 +73,7 @@
                                    <td>{{ x.groupe }}</td>
                                    <td>{{ x.projet }}</td>
                                    <td>{{ x.status }}</td>
-                                   <td><a class="btn btn-primary mr-3" name="device_id" href="{{ url_for('projet', projet_id=x.id) }}">Voir</a></td>
+                                   <td><a class="btn btn-primary mr-3" name="device_id" href="{{ url_for('projet', projet_id=x.id_projet) }}">Voir</a></td>
                                 </tr>
                                 {%endfor%}
                             </tbody>
@@ -83,6 +83,7 @@
                                 <th>Description</th>
                                 <th>Groupe</th>
                                 <th>Projet</th>
+                                <th>Status</th>
                                 <th>Détail</th>
                                </tr>
                             </tfoot>
