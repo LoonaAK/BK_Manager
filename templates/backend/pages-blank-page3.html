@@ -67,6 +67,9 @@
                                         <tr>
                                         <td>{{ x.id }}</td>
                                         <td>{{ x.nom }}</td>
+                                        {%if x.id == 1%}
+                                        <td><a href="#" class="btn disabled btn-primary" data-target="" data-toggle="modal">Supprimer</a></td>
+                                        {%else%}
                                         <td>
                                             <div class="modal fade" role="dialog" aria-modal="true" id="supp-cat-modal-{{ x.id }}">
                                                 <div class="modal-dialog  modal-dialog-centered" role="document">
@@ -89,6 +92,7 @@
                                             </div>
                                         </form>
                                         <a href="#" class="btn btn-primary" data-target="#supp-cat-modal-{{ x.id }}" data-toggle="modal">Supprimer</a></td>
+                                        {%endif%}
                                         {%endfor%}
                                     </tbody>
                                     <tfoot>

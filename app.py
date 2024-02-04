@@ -14,7 +14,7 @@ import re
 import hashlib
 
 # Importer le module datetime pour la gestion des dates et des heures
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time, date
 
 # Initialiser l'application Flask
 app = Flask(__name__, static_url_path='', static_folder='static')
@@ -105,23 +105,66 @@ def projets():
         cursor.execute('SELECT * FROM categories')
         categories = cursor.fetchall()
 
+        nbr_projets = cursor.execute('SELECT * FROM projet')
+        nbr_tache_attente = cursor.execute('SELECT * FROM tache WHERE status = "En attente"')
+        nbr_tache_cours = cursor.execute('SELECT * FROM tache WHERE status = "En cours"')
+        nbr_projets_retard = 0
+
         # Créer une liste vide pour stocker les projets
         l_projet_1 = []
 
         # Parcourir tous les projets récupérés
         for projet in projets:
             
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute( "SELECT * FROM tache WHERE id_projet = %s", [projet['id']] )
+            projet_tache = cursor.fetchall()
+
+            # Calcul de la date de fin prévue pour le projet en utilisant la date de création et la durée des tâches
+            date_th = 0
+            for x in projet_tache:
+                date_th = date_th + x['temps']
+            
+            date_th_d = projet['date_creation'] + timedelta(days=date_th)
+
+            if date_th_d > projet['date_fin']:
+                nbr_projets_retard = nbr_projets_retard + 1
+            else:
+                pass
+
             # Formater la date de fin de chaque projet pour l'afficher en jour/mois/année
             date_fin = projet['date_fin'].strftime("%d/%m/%Y")
 
+            jfin = projet['date_fin'] - date.today()
+
+            jtot = projet['date_fin'] - projet['date_creation']
+            
+            print(jfin.days)
+            print(jtot.days)
+
+            if jfin.days < 0:
+                jprct = 100
+            elif jtot.days == 1:
+                jprct = 85
+            elif jtot.days == 0:
+                jprct = 100
+            else:
+                if date.today() == projet['date_creation']:
+                    jprct = (1 / jtot.days) * 100
+                else:
+                    jprct = ((jtot.days - jfin.days) / jtot.days) * 100
+                                
+
+            print(jprct)
+
             # Créer un dictionnaire pour stocker les informations de chaque projet
-            l_projet_2 = {'id': projet['id'], 'nom': projet['nom'], 'description': projet['description'], 'categorie': projet['categorie'], 'date_fin': date_fin, 'budget': projet['budget'], 'date_creation': projet['date_creation']}
+            l_projet_2 = {'id': projet['id'], 'nom': projet['nom'], 'description': projet['description'], 'categorie': projet['categorie'], 'date_fin': date_fin, 'budget': projet['budget'], 'date_creation': projet['date_creation'], 'jprct': jprct, 'jrest': jfin.days}
 
             # Ajouter les informations du projet à la liste 'l_projet_1'
             l_projet_1.append(l_projet_2)
 
         # Affichage de la page avec les projets et les catégories récupérés
-        return render_template('backend/index.html', l_projet_1=l_projet_1, categories=categories)
+        return render_template('backend/index.html', nbr_projets_retard=nbr_projets_retard, nbr_tache_cours=nbr_tache_cours, nbr_tache_attente=nbr_tache_attente, nbr_projets=nbr_projets, l_projet_1=l_projet_1, categories=categories)
     
     # Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
@@ -154,9 +197,9 @@ def projet():
         projet_tache = cursor.fetchall()
 
         # Calcul de la date de fin prévue pour le projet en utilisant la date de création et la durée des tâches
-        date_th = projet_info['date_creation']
+        date_th = 0
         for x in projet_tache:
-            date_th = projet_info['date_creation'] + timedelta(days=x['temps'])
+            date_th = date_th + x['temps']
 
         # Calcul du nombre total de tâches pour ce projet
         tache_total = 0
@@ -177,13 +220,22 @@ def projet():
         
         # Formatage des dates pour l'affichage
         date_fin = projet_info['date_fin'].strftime("%d/%m/%Y")
-        date_th_g = date_th.strftime("%d/%m/%Y")
+
+        date_th_d = projet_info['date_creation'] + timedelta(days=date_th)
+
+        date_th_d_g = date_th_d.strftime("%d/%m/%Y")
+
+        th_d = False
+        if date_th_d > projet_info['date_fin']:
+            th_d = True
+        else:
+            th_d = False
 
         # Requête pour voir l'hôte du serveur 
         hostname = request.headers.get('Host')
 
         # Affichage des informations du projet, des achats et des tâches associées
-        return render_template('backend/projet.html', host=hostname, projet_info=projet_info, projet_achat=projet_achat, projet_tache=projet_tache, date_fin=date_fin, date_th_g=date_th_g, tache_pourcent=tache_pourcent)
+        return render_template('backend/projet.html', host=hostname, projet_info=projet_info, projet_achat=projet_achat, projet_tache=projet_tache, date_fin=date_fin, date_th_g=date_th, tache_pourcent=tache_pourcent, th_d=th_d, date_th_d_g=date_th_d_g)
     
     # Redirection vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
@@ -704,6 +756,32 @@ def change_mdp():
     return redirect(url_for('login'))
 
 # Définition de la route pour les informations des contacts de l'utilisateur
+@app.route('/description', methods=['GET', 'POST'])
+def description():
+    
+    # Vérifie si l'utilisateur est connecté
+    if session['loggedin'] == True:
+
+        objet_id = request.args.get("objet_id")
+
+        # Si la requête est une requête POST et que les champs "telephone" et "email" sont dans le formulaire
+        if request.method == 'POST' and 'description' in request.form:
+
+            # Récupère les valeurs des champs "telephone" et "email" depuis le formulaire
+            description = request.form['description']
+
+            # Effectue la mise à jour de la base de données avec les nouvelles valeurs
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('UPDATE projet SET description = %s WHERE id = %s', (description, objet_id))
+            mysql.connection.commit()
+
+            # Redirige l'utilisateur vers la page de profil
+            return redirect(url_for("projet", projet_id=objet_id))
+            
+    # Si l'utilisateur n'est pas connecté, redirige vers la page de connexion
+    return redirect(url_for('login'))
+
+# Définition de la route pour les informations des contacts de l'utilisateur
 @app.route('/info_contact', methods=['GET', 'POST'])
 def info_contact():
     
@@ -916,6 +994,7 @@ def suppresion():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         if objet_type == "Projet":
             cursor.execute('DELETE FROM projet WHERE id = %s', [objet_id])
+            cursor.execute('DELETE FROM tache WHERE id_projet = %s', [objet_id])
             mysql.connection.commit()
             flash("Projet ID : "+ objet_id +" supprimer avec succès", "success")
             return redirect(url_for('projets'))
