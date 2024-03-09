@@ -13,8 +13,12 @@ import re
 # Importer le module hashlib pour le hachage des mots de passe
 import hashlib
 
+from flask_socketio import SocketIO, join_room
+
 # Importer le module datetime pour la gestion des dates et des heures
 from datetime import datetime, timedelta, time, date
+
+import json
 
 # Initialiser l'application Flask
 app = Flask(__name__, static_url_path='', static_folder='static')
@@ -23,13 +27,15 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 app.secret_key = '1a2b3c4d5e'
 
 # Configurer les informations de connexion à la base de données MySQL
-app.config['MYSQL_HOST'] = ''
-app.config['MYSQL_USER'] = ''
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = ''
+app.config['MYSQL_HOST'] = '141.94.37.252'
+app.config['MYSQL_USER'] = 'bleona_db'
+app.config['MYSQL_PASSWORD'] = '1Xayt12_4'
+app.config['MYSQL_DB'] = 'bleona'
 
 # Initialiser le module Flask-MySQL avec les configurations de l'application Flask
 mysql = MySQL(app)
+
+socketio = SocketIO(app)
 
 
 # Définir la route d'accueil de l'application Flask pour la page de connexion
@@ -138,9 +144,6 @@ def projets():
             jfin = projet['date_fin'] - date.today()
 
             jtot = projet['date_fin'] - projet['date_creation']
-            
-            print(jfin.days)
-            print(jtot.days)
 
             if jfin.days < 0:
                 jprct = 100
@@ -153,9 +156,6 @@ def projets():
                     jprct = (1 / jtot.days) * 100
                 else:
                     jprct = ((jtot.days - jfin.days) / jtot.days) * 100
-                                
-
-            print(jprct)
 
             # Créer un dictionnaire pour stocker les informations de chaque projet
             l_projet_2 = {'id': projet['id'], 'nom': projet['nom'], 'description': projet['description'], 'categorie': projet['categorie'], 'date_fin': date_fin, 'budget': projet['budget'], 'date_creation': projet['date_creation'], 'jprct': jprct, 'jrest': jfin.days}
@@ -177,6 +177,7 @@ def projet():
 
     # Récupération de l'ID du projet à afficher à partir des arguments de la requête
     projet_id = request.args.get("projet_id")
+    show_chat_modal = request.args.get("show_chat_modal")
     
     # Vérification de la connexion de l'utilisateur
     if session['loggedin'] == True:
@@ -185,6 +186,11 @@ def projet():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute( "SELECT * FROM projet WHERE id = %s", [projet_id] )
         projet_info = cursor.fetchone()
+
+        # Récupération des informations du projet à partir de la base de données
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute( "SELECT * FROM conversation WHERE id_projet = %s", [projet_id] )
+        conversation = cursor.fetchall()
 
         # Récupération des achats associés à ce projet depuis la base de données
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -195,6 +201,7 @@ def projet():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute( "SELECT * FROM tache WHERE projet = %s", [projet_info['nom']] )
         projet_tache = cursor.fetchall()
+        
 
         # Calcul de la date de fin prévue pour le projet en utilisant la date de création et la durée des tâches
         date_th = 0
@@ -217,13 +224,17 @@ def projet():
         else:
             # Calcul du pourcentage de tâches finies pour ce projet
             tache_pourcent = (tache_fini / tache_total) * 100
-        
+
         # Formatage des dates pour l'affichage
         date_fin = projet_info['date_fin'].strftime("%d/%m/%Y")
+
+        date_debut = projet_info['date_creation'].strftime("%d/%m/%Y")
 
         date_th_d = projet_info['date_creation'] + timedelta(days=date_th)
 
         date_th_d_g = date_th_d.strftime("%d/%m/%Y")
+
+        session['projet_select'] = projet_info['id']
 
         th_d = False
         if date_th_d > projet_info['date_fin']:
@@ -231,66 +242,12 @@ def projet():
         else:
             th_d = False
 
-        # Requête pour voir l'hôte du serveur 
-        hostname = request.headers.get('Host')
-
         # Affichage des informations du projet, des achats et des tâches associées
-        return render_template('backend/projet.html', host=hostname, projet_info=projet_info, projet_achat=projet_achat, projet_tache=projet_tache, date_fin=date_fin, date_th_g=date_th, tache_pourcent=tache_pourcent, th_d=th_d, date_th_d_g=date_th_d_g)
+        return render_template('backend/projet.html', conversation=conversation, date_debut=date_debut, show_chat_modal=show_chat_modal, projet_info=projet_info, projet_achat=projet_achat, projet_tache=projet_tache, date_fin=date_fin, date_th_g=date_th, tache_pourcent=tache_pourcent, th_d=th_d, date_th_d_g=date_th_d_g)
     
     # Redirection vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
 
-
-
-@app.route('/nfc')
-def nfc():
-
-    # Récupérer l'identifiant du projet à partir de la requête GET
-    projet_id = request.args.get("projet_id")
-    
-    # Récupérer les informations du projet à partir de la base de données
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute( "SELECT * FROM projet WHERE id = %s", [projet_id] )
-    projet_info = cursor.fetchone()
-
-    # Récupérer les achats liés au projet
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute( "SELECT * FROM achat WHERE projet = %s", [projet_info['nom']] )
-    projet_achat = cursor.fetchall()
-        
-    # Récupérer les tâches liées au projet
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute( "SELECT * FROM tache WHERE projet = %s", [projet_info['nom']] )
-    projet_tache = cursor.fetchall()
-
-    # Calculer la date théorique de fin du projet en ajoutant la durée de chaque tâche à la date de création du projet
-    date_th = projet_info['date_creation']
-    for x in projet_tache:
-        date_th = projet_info['date_creation'] + timedelta(days=x['temps'])
-
-    # Calculer le nombre total de tâches
-    tache_total = 0
-    for tache_a in projet_tache:
-            tache_total += 1
-        
-    # Calculer le nombre de tâches finies
-    tache_fini = 0
-    for tache_b in projet_tache:
-        if tache_b['status'] == "Fini":
-            tache_fini += 1
-        
-    # Calculer le pourcentage de tâches finies
-    try:
-        tache_pourcent = (tache_fini / tache_total) * 100
-    except :
-       tache_pourcent = 0 
-
-    # Formater la date de fin du projet et la date théorique de fin du projet pour l'affichage
-    date_fin = projet_info['date_fin'].strftime("%d/%m/%Y")
-    date_th_g = date_th.strftime("%d/%m/%Y")
-
-    # Renvoyer la page HTML de la vue du projet avec les informations calculées
-    return render_template('backend/projet_nfc.html', projet_info=projet_info, projet_achat=projet_achat, projet_tache=projet_tache, date_fin=date_fin, date_th_g=date_th_g, tache_pourcent=tache_pourcent)
 
 
 @app.route('/change_status', methods=['GET', 'POST'])
@@ -1023,7 +980,67 @@ def suppresion():
             pass
             
     return redirect(url_for('login'))
- 
+
+@app.route('/chat/ajout', methods=['GET', 'POST'])
+def chat_ajout():
+    projet_id = request.args.get("projet_id")
+    message = request.form['message']
+    if session['loggedin'] == True:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', (projet_id, session['username'], message, datetime.now()))
+        mysql.connection.commit()
+        show_chat_modal= True
+        return redirect(url_for('projet', projet_id=projet_id, show_chat_modal=show_chat_modal))
+    else:      
+        return redirect(url_for('login'))
+
+@socketio.on('message')
+def handle_message(msg):
+    project_id = msg['project_id']
+    conversation = msg['conversation']
+    if conversation == "":
+        pass
+    else:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', (project_id, session['username'], conversation, datetime.now()))
+        mysql.connection.commit()
+        time = datetime.now().strftime("%H:%M %d/%m/%Y")
+        socketio.emit('new_message', {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 'project_id': project_id, 'is_current_user': True}, room=request.sid)
+        emit_to_others = {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 'project_id': project_id, 'is_current_user': False}
+        socketio.emit('new_message', emit_to_others, room=f"project_{project_id}", skip_sid=request.sid)
+
+@socketio.on('connect')
+def handle_connect():
+    project_id = session.get('projet_select')
+    if project_id is not None:
+        room_name = f"project_{project_id}"
+        join_room(room_name)
+        if session.get(room_name) is None:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute("SELECT * FROM conversation WHERE id_projet = %s", [project_id])
+            conversation = cursor.fetchall()
+
+            for message in conversation:
+                if session['username'] == message['utilisateur']:
+                    socketio.emit('new_message', {
+                        'time': message['date'].strftime("%H:%M %d/%m/%Y"),
+                        'utilisateur': message['utilisateur'],
+                        'conversation': message['message'],
+                        'project_id': project_id,
+                        'is_current_user': True
+                    }, room=request.sid) 
+                else:
+                    socketio.emit('new_message', {
+                        'time': message['date'].strftime("%H:%M %d/%m/%Y"),
+                        'utilisateur': message['utilisateur'],
+                        'conversation': message['message'],
+                        'project_id': project_id,
+                        'is_current_user': False
+                    }, room=request.sid) 
+            session[room_name] = True
+        
+        
+
 # Définition de la route pour se déconnecté
 @app.route('/deconnexion')
 def deconnexion():
@@ -1040,3 +1057,4 @@ def deconnexion():
 if __name__ =='__main__':
     # Démarre l'application Flask en mode debug
     app.run(Debug=True)
+    socketio.run(app)

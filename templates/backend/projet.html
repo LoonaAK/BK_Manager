@@ -15,7 +15,34 @@
       
       <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-calendar/dist/tui-calendar.css">
       <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-date-picker/dist/tui-date-picker.css">
-      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css">  </head>
+      <link rel="stylesheet" href="../assets/vendor/tui-calendar/tui-time-picker/dist/tui-time-picker.css">
+      <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+      <style>
+        .chat-container {
+            width: auto;
+            margin: 50px auto;
+            background-color: #fff;
+            border: 1px solid #E0E2DB;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: scroll;
+            max-height: 300px;
+            display: flex; 
+            flex-direction: column-reverse;
+        }
+        .message {
+            background-color: #e6e6e6;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .message.sender {
+            background-color: #6857ff42;
+            text-align: right;
+        }
+    </style>
+        </head>
   <body class="  ">
     <!-- loader Start -->
     <div id="loading">
@@ -55,24 +82,8 @@
                                             <p class="mb-2">Temps moyen de réalisation : <b>{{ date_th_g }} jours - <span class="badge badge-primary">{{date_th_d_g}}</span></b></p>
                                             {%endif%}
                                             {%endif%}
+                                            <p class="mb-2">Début du projet : <b>{{ date_debut }}</b></p>
                                             <p class="mb-2">Fin du projet : <b>{{ date_fin }}</b></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
-                                    <div id="circle-progress-24" class="circle-progress-01 circle-progress circle-progress-primary" data-min-value="0" data-max-value="100" data-value="{{ tache_pourcent }}" data-type="percent"></div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-8">
-                                    <div class="d-flex align-items-center">
-                                        <div class="ml-3">
-                                            <p class="mb-2">Lien NFC : <br><b>http://{{ host }}/nfc?projet_id={{ projet_info['id'] }}</b></p>
                                         </div>
                                     </div>
                                 </div>
@@ -129,10 +140,26 @@
                                     <form action="{{ url_for('description', objet_id=projet_info['id']) }}" method="post" enctype="multipart/form-data">
                                     <div class="form-group mb-3">
                                         <label class="h5">Description du projet</label>
-                                        <textarea type="text" class="form-control" id="description" name="description" rows="10">{{ projet_info['description'] }}</textarea>
+                                        <textarea type="text" class="form-control" id="description" name="description" rows="3">{{ projet_info['description'] }}</textarea>
                                         <button class="btn btn-primary mr-3 mt-3" type="submit">Sauvegarder</button>
                                     </div>
                                 </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-8">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ml-3">
+                                            <p class="mb-2">Conversation du projet<br><b>Cliquez pour ouvrir la conversation.</b></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 text-sm-right mt-3 mt-sm-0">
+                                    <a href="#" class="btn btn-primary" data-target="#chat-modal" data-toggle="modal">Ouvrir</a>
                                 </div>
                             </div>
                         </div>
@@ -323,6 +350,107 @@
          </div>
      </div>
    </form>
+    <div class="modal fade bd-example-modal-lg" role="dialog" aria-modal="true" id="chat-modal">
+       <div class="modal-dialog  modal-dialog-centered modal-lg" role="document">
+           <div class="modal-content">
+               <div class="modal-header d-block text-center pb-3 border-bttom">
+                   <h3 class="modal-title" id="exampleModalCenterTitle02">Conversation</h3>
+               </div>
+               <div class="modal-body">
+                   <div class="row">
+                       <div class="col-lg-12">
+                            <div class="chat-container" id="chat-container">
+                                <div id="messageList"></div>
+                            </div>
+                            
+                       </div>
+                       <div class="col-lg-12">
+                           <div class="form-group mb-3">
+                            <div class="input-group mb-4">
+                                <div class="input-group mb-4">
+                                    <input type="text" class="form-control" id="message_input" name="message_input" placeholder="Votre message" aria-label="Votre message">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" id="send_button">Envoyer</button>
+                                    </div>
+                                 </div>
+                                   <script>
+                                    var socket = io();
+                                    
+                                    var lastMessageTime = null;
+
+                                    socket.on('connect', function() {
+                                        var projectId = getUrlParameter('projet_id');
+                                        
+                                        socket.emit('get_new_messages', {project_id: projectId, lastMessageTime: lastMessageTime});
+                                    });
+
+                                    function addMessageToList(msg) {
+                                        var messageList = document.getElementById("messageList");
+                                        var messageDiv = document.createElement("div");
+                                        messageDiv.className = "message";
+                                        
+                                        if (msg.is_current_user) {
+                                            messageDiv.classList.add("sender");
+                                        }
+
+                                        var messageContent = document.createElement("p");
+                                        messageContent.textContent = msg.conversation; 
+                                        messageContent.style.margin = "0";
+
+                                        var messageDetails = document.createElement("p");
+                                        messageDetails.textContent = msg.utilisateur + " - " + msg.time;
+                                        messageDetails.style.margin = "0";
+
+                                        messageDiv.appendChild(messageContent);
+                                        messageDiv.appendChild(messageDetails);
+                                        
+                                        messageList.appendChild(messageDiv);
+                                        
+                                    }
+
+                                    function scrollToBottom() {
+                                        var messageDiv = document.createElement("div");
+                                        
+                                        messageDiv.scrollTop = messageDiv.scrollHeight;
+                                    }
+
+                                    window.onload = scrollToBottom;
+
+                                    socket.on('new_message', function(msg){
+                                        addMessageToList(msg);
+                                        lastMessageTime = new Date(msg.timestamp).getTime();
+                                    });
+                                    
+
+                                    document.getElementById("send_button").addEventListener("click", function() {
+                                        var input = document.getElementById("message_input");
+                                        var conversation = input.value;
+                                        var projectId = getUrlParameter('projet_id');
+                                        socket.emit('message', { conversation: conversation, project_id: projectId });
+                                        input.value = '';
+                                    });
+
+                                    function getUrlParameter(name) {
+                                        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+                                        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                                        var results = regex.exec(location.search);
+                                        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+                                    }
+                                </script>
+                             </div>
+                            </div>
+                       </div>
+                     </div>
+                       <div class="col-lg-12">
+                           <div class="d-flex flex-wrap align-items-ceter justify-content-center mt-2">
+                               <div class="btn btn-primary" data-dismiss="modal">Fermer</div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
         <!-- Page end  -->
     </div>
       </div>
@@ -339,6 +467,7 @@
             </div>
         </div>
     </footer>
+    
     <!-- Backend Bundle JavaScript -->
     <script src="../assets/js/backend-bundle.min.js"></script>
     
