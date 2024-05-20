@@ -803,6 +803,7 @@ def info_contact():
             # Récupère les valeurs des champs "telephone" et "email" depuis le formulaire
             telephone = request.form['telephone']
             email = request.form['email']
+            profile_id = session['id']
 
             # Effectue la mise à jour de la base de données avec les nouvelles valeurs
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
