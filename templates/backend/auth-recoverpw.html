@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <title>BK Manager | Connexion</title>
+      <title>BK Manager | Mot de passe oublié</title>
       
       <!-- Favicon -->
       <link rel="shortcut icon" href="../assets/images/favicon.ico" />
@@ -34,27 +34,18 @@
                         <div class="d-flex align-items-center auth-content">
                            <div class="col-lg-6 bg-primary content-left">
                               <div class="p-3">
-                                 <h2 class="mb-2 text-white">Connexion</h2>
-                                 <p>Connectez-vous pour rester informé.</p>
-                                 <form action="{{ url_for('login') }}" method="post">
+                                 <h2 class="mb-2 text-white">Réinitialiser le mot de passe</h2>
+                                 <p>Entrez votre adresse e-mail et nous vous enverrons un e-mail contenant des instructions pour réinitialiser votre mot de passe.</p>
+                                 <form action="{{ url_for('recuperation') }}" method="post">
                                     <div class="row">
                                        <div class="col-lg-12">
                                           <div class="floating-label form-group">
-                                             <input class="floating-input form-control" name="username" type="text" id="username" placeholder=" ">
+                                             <input class="floating-input form-control" name="email" type="text" id="email" placeholder=" ">
                                              <label>Email</label>
                                           </div>
                                        </div>
-                                       <div class="col-lg-12">
-                                          <div class="floating-label form-group">
-                                             <input class="floating-input form-control" name="password" type="password" id="password" placeholder=" ">
-                                             <label>Mot de passe</label>
-                                          </div>
-                                       </div>
                                     </div>
-                                    <button type="submit" class="btn btn-white">Connexion</button>
-                                    <p class="mt-3">
-                                       <a href="{{url_for('recuperation')}}" class="text-white text-underline">Mot de passe oublié?</a>
-                                    </p>
+                                    <button type="submit" class="btn btn-white">Réinitialiser</button>
                                  </form>
                               </div>
                            </div>

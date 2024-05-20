@@ -20,6 +20,12 @@ from datetime import datetime, timedelta, time, date
 
 import json
 
+import secrets
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 # Initialiser l'application Flask
 app = Flask(__name__, static_url_path='', static_folder='static')
 
@@ -27,10 +33,10 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 app.secret_key = '1a2b3c4d5e'
 
 # Configurer les informations de connexion à la base de données MySQL
-app.config['MYSQL_HOST'] = ''
-app.config['MYSQL_USER'] = ''
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = ''
+app.config['MYSQL_HOST'] = '141.94.37.252'
+app.config['MYSQL_USER'] = 'bleona_db'
+app.config['MYSQL_PASSWORD'] = '1Xayt12_4'
+app.config['MYSQL_DB'] = 'bleona'
 
 # Initialiser le module Flask-MySQL avec les configurations de l'application Flask
 mysql = MySQL(app)
@@ -93,6 +99,52 @@ def login():
     # Afficher la page de connexion
     return render_template('backend/auth-sign-in.html')
 
+
+# Définir la route d'accueil de l'application Flask pour la page de connexion
+@app.route('/recuperation', methods=['GET', 'POST'])
+def recuperation():
+
+    if request.method == 'POST' and 'email' in request.form:
+        email = request.form['email']
+        
+        if email == "":
+            flash("Veuillez mettre l'email afin de poursuivre ", "danger")
+        else: 
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute( "SELECT * FROM clients WHERE email = %s", [email] )
+            user_exist = cursor.fetchone()
+            if user_exist:
+                newpassword = secrets.token_urlsafe(6)
+                subject = "Réinitialiser le mot de passe"
+                body = f"Demande de réinitialisation de mot de passe effectuée.\n\nVoici votre nouveau mot de passe :\n{newpassword}\n\nCordialement,\nL'équipe BK Manager !"
+                sender = "bkmanager.noreply@gmail.com"
+                recipients = email
+                password = "bvpkijvkwcpuodla"
+
+                newpasshash = hashlib.md5(newpassword.encode('utf8')).hexdigest()
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                cursor.execute('UPDATE clients SET password = %s WHERE email = %s', (newpasshash, email))
+                mysql.connection.commit()
+            
+                def send_email(subject, body, sender, recipients, password):
+                    msg = MIMEText(body)
+                    msg['Subject'] = subject
+                    msg['From'] = sender
+                    msg['To'] = recipients
+                    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+                        smtp_server.login(sender, password)
+                        smtp_server.sendmail(sender, recipients, msg.as_string())
+
+                send_email(subject, body, sender, recipients, password)
+                
+                flash("Demande envoyer avec succès, veuillez vous connecter avec votre nouveau mot de passe ", "success")
+                return redirect(url_for('login'))
+            else:
+                flash("Veuillez mettre une email valide ", "danger")
+    
+
+    # Afficher la page de connexion
+    return render_template('backend/auth-recoverpw.html')
 
 # Définir une route pour '/projets' avec la méthode GET
 @app.route('/projets')
