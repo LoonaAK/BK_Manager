@@ -74,13 +74,15 @@
                                     <td>{{ x.nbr_client }}</td>
                                     {%if x.id == 1%}
                                     <td><a href="#" class="btn disabled btn-primary" data-target="" data-toggle="modal">Supprimer</a></td>
+                                    {%elif session['groupe'] != 'Directeur'%}
+                                    <td><a href="#" class="btn disabled btn-primary" data-target="" data-toggle="modal">Supprimer</a></td>
                                     {%else%}
                                     <td>
                                         <div class="modal fade" role="dialog" aria-modal="true" id="supp-grp-modal-{{ x.id }}">
                                             <div class="modal-dialog  modal-dialog-centered" role="document">
                                                 <div class="modal-content">
                                                     <div class="modal-header d-block text-center pb-3 border-bttom">
-                                                        <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sur de vouloir supprimer le groupe ?</h3>
+                                                        <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sûr de vouloir supprimer le groupe ?</h3>
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="row">

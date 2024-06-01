@@ -1,10 +1,10 @@
 import pymysql
 import hashlib
 
-MYSQL_HOST = ''
-MYSQL_USER = ''
-MYSQL_PASSWORD = ''
-MYSQL_DB = ''
+MYSQL_HOST = '141.94.37.252'
+MYSQL_USER = 'bleona_test'
+MYSQL_PASSWORD = 'e1v3%z6Y0'
+MYSQL_DB = 'bleona_test'
 
 # Création de la table "achat"
 def create_tables():
@@ -30,11 +30,14 @@ def create_tables():
     # Définition de la requête SQL pour créer la table "groupe"
     cursor.execute("CREATE TABLE groupe (id INT AUTO_INCREMENT PRIMARY KEY, nom TEXT, categorie TEXT)")
 
+    # Définition de la requête SQL pour créer la table "conversation"
+    cursor.execute("CREATE TABLE conversation (id INT AUTO_INCREMENT PRIMARY KEY, id_projet INT, utilisateur TEXT, message TEXT, date DATETIME)")
+
     # Définition de la requête SQL pour créer la table "projet"
     cursor.execute("CREATE TABLE projet (id INT AUTO_INCREMENT PRIMARY KEY, nom TEXT, description TEXT, categorie TEXT, date_fin DATE, budget INT, date_creation DATE)")
 
     # Définition de la requête SQL pour créer la table "tache"
-    cursor.execute("CREATE TABLE tache (id INT AUTO_INCREMENT PRIMARY KEY, description TEXT, groupe TEXT, projet TEXT, temps INT, status TEXT)")
+    cursor.execute("CREATE TABLE tache (id INT AUTO_INCREMENT PRIMARY KEY, description TEXT, groupe TEXT, projet TEXT, id_projet TEXT, temps INT, status TEXT)")
 
     # Définition de la requête SQL pour créer la catégorie de base "Direction"
     cursor.execute('INSERT INTO categories VALUES (NULL, %s)', ["Direction"])

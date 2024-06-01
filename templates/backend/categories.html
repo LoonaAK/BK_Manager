@@ -40,7 +40,7 @@
                             <div class="d-flex flex-wrap align-items-center justify-content-between">
                              {%if session['groupe'] == 'Directeur'%}
                                 <div class="pl-3 border-left btn-new">
-                                    <a href="#" class="btn btn-primary" data-target="#new-groupe-modal" data-toggle="modal">Nouvelle catégorie</a>
+                                    <a href="#" class="btn btn-primary" data-target="#new-groupe-modal" data-toggle="modal">Nouvel catégorie</a>
                                 </div>
                              
                              {%endif%}
@@ -69,13 +69,15 @@
                                         <td>{{ x.nom }}</td>
                                         {%if x.id == 1%}
                                         <td><a href="#" class="btn disabled btn-primary" data-target="" data-toggle="modal">Supprimer</a></td>
+                                        {%elif session['groupe'] != 'Directeur'%}
+                                        <td><a href="#" class="btn disabled btn-primary" data-target="" data-toggle="modal">Supprimer</a></td>
                                         {%else%}
                                         <td>
                                             <div class="modal fade" role="dialog" aria-modal="true" id="supp-cat-modal-{{ x.id }}">
                                                 <div class="modal-dialog  modal-dialog-centered" role="document">
                                                     <div class="modal-content">
                                                         <div class="modal-header d-block text-center pb-3 border-bttom">
-                                                            <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sur de vouloir supprimer la catégorie ?</h3>
+                                                            <h3 class="modal-title" id="exampleModalCenterTitle01">Êtes-vous sûr de vouloir supprimer la catégorie ?</h3>
                                                         </div>
                                                         <div class="modal-body">
                                                             <div class="row">

@@ -18,12 +18,19 @@ from flask_socketio import SocketIO, join_room
 # Importer le module datetime pour la gestion des dates et des heures
 from datetime import datetime, timedelta, time, date
 
+# Import de la bibliothèque JSON pour la manipulation de données JSON
 import json
 
+# Import de la bibliothèque secrets pour la génération de nombres aléatoires sécurisés
 import secrets
 
+# Import de la bibliothèque smtplib pour l'envoi d'e-mails via le protocole SMTP
 import smtplib
+
+# Import de la classe MIMEMultipart de la bibliothèque email.mime.multipart pour créer des objets multipartes MIME
 from email.mime.multipart import MIMEMultipart
+
+# Import de la classe MIMEText de la bibliothèque email.mime.text pour créer des objets MIME de type texte
 from email.mime.text import MIMEText
 
 # Initialiser l'application Flask
@@ -41,6 +48,7 @@ app.config['MYSQL_DB'] = 'bleona'
 # Initialiser le module Flask-MySQL avec les configurations de l'application Flask
 mysql = MySQL(app)
 
+# Import de la classe SocketIO pour la gestion des connexions WebSocket
 socketio = SocketIO(app)
 
 
@@ -94,57 +102,68 @@ def login():
         else:
 
             # Si aucun compte n'est trouvé, afficher un message d'erreur flash et rester sur la page de connexion
-            flash("Utilisateur ou mot de passe incorrect ", "danger")
+            flash("Utilisateur ou mot de passe incorrects ", "danger")
             
     # Afficher la page de connexion
-    return render_template('backend/auth-sign-in.html')
+    return render_template('backend/connexion.html')
 
 
-# Définir la route d'accueil de l'application Flask pour la page de connexion
 @app.route('/recuperation', methods=['GET', 'POST'])
 def recuperation():
-
+    # Traitement du formulaire de récupération
     if request.method == 'POST' and 'email' in request.form:
         email = request.form['email']
         
+        # Vérification si le champ email est vide
         if email == "":
-            flash("Veuillez mettre l'email afin de poursuivre ", "danger")
-        else: 
+            flash("Veuillez entrer votre adresse email pour continuer ", "danger")
+        else:
+            # Connexion à la base de données
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute( "SELECT * FROM clients WHERE email = %s", [email] )
+            # Vérification si l'email existe dans la table 'clients'
+            cursor.execute("SELECT * FROM clients WHERE email = %s", [email])
             user_exist = cursor.fetchone()
+            
             if user_exist:
+                # Génération d'un nouveau mot de passe sécurisé
                 newpassword = secrets.token_urlsafe(6)
+                # Sujet et corps de l'email
                 subject = "Réinitialiser le mot de passe"
                 body = f"Demande de réinitialisation de mot de passe effectuée.\n\nVoici votre nouveau mot de passe :\n{newpassword}\n\nCordialement,\nL'équipe BK Manager !"
+                # Informations de l'expéditeur et du destinataire de l'email
                 sender = "bkmanager.noreply@gmail.com"
                 recipients = email
+                # Mot de passe de l'expéditeur (note : il est préférable de stocker ce mot de passe de manière sécurisée)
                 password = "bvpkijvkwcpuodla"
-
+                
+                # Hashage du nouveau mot de passe
                 newpasshash = hashlib.md5(newpassword.encode('utf8')).hexdigest()
-                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                # Mise à jour du mot de passe dans la base de données
                 cursor.execute('UPDATE clients SET password = %s WHERE email = %s', (newpasshash, email))
                 mysql.connection.commit()
-            
+                
+                # Fonction pour envoyer l'email
                 def send_email(subject, body, sender, recipients, password):
                     msg = MIMEText(body)
                     msg['Subject'] = subject
                     msg['From'] = sender
                     msg['To'] = recipients
+                    # Envoi de l'email via SMTP
                     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
                         smtp_server.login(sender, password)
                         smtp_server.sendmail(sender, recipients, msg.as_string())
 
+                # Appel de la fonction d'envoi d'email
                 send_email(subject, body, sender, recipients, password)
                 
-                flash("Demande envoyer avec succès, veuillez vous connecter avec votre nouveau mot de passe ", "success")
+                flash("Demande envoyée avec succès, veuillez vous connecter avec votre nouveau mot de passe ", "success")
                 return redirect(url_for('login'))
             else:
-                flash("Veuillez mettre une email valide ", "danger")
+                flash("Veuillez entrer une adresse email valide ", "danger")
     
+    # Afficher la page de récupération de mot de passe
+    return render_template('backend/motdepasseoublier.html')
 
-    # Afficher la page de connexion
-    return render_template('backend/auth-recoverpw.html')
 
 # Définir une route pour '/projets' avec la méthode GET
 @app.route('/projets')
@@ -220,7 +239,6 @@ def projets():
     
     # Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
-
 
 
 # Définir la route pour la page d'affichage d'un projet spécifique
@@ -301,7 +319,6 @@ def projet():
     return redirect(url_for('login'))
 
 
-
 @app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
 
@@ -338,7 +355,7 @@ def change_status():
 
         elif request.method == 'POST':
             # Si la méthode est POST mais qu'il manque des informations dans le formulaire, affiche un message d'erreur
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
     
     # Si l'utilisateur n'est pas connecté, redirige vers la page de connexion
     return redirect(url_for('login'))
@@ -371,12 +388,12 @@ def ajout_achat():
 
             # Vérification si le budget restant est suffisant pour réaliser l'achat
             if nouveau_budget < 0:
-                flash("Le projet n'as plus assez de budget ", "danger")
+                flash("Le projet n'a plus suffisamment de budget ", "danger")
                 return redirect(url_for('projet', projet_id=projet_id))
 
             # Vérification si les champs "objet" et "prix" sont bien renseignés dans le formulaire
             elif objet == "" and prix == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('projet', projet_id=projet_id))
 
             else:
@@ -390,7 +407,7 @@ def ajout_achat():
                 mysql.connection.commit()
 
                 # Message de confirmation de l'ajout de l'achat
-                flash("Achat ajouter ", "success")
+                flash("Achat ajouté ", "success")
 
                 # Redirection vers la page du projet
                 return redirect(url_for('projet', projet_id=projet_id))
@@ -399,7 +416,7 @@ def ajout_achat():
         elif request.method == 'POST':
 
             # Message d'erreur si les champs "objet" et "prix" ne sont pas renseignés dans le formulaire
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
 
     # Redirection vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
@@ -422,8 +439,8 @@ def profiles():
         cursor.execute('SELECT * FROM clients')
         clients = cursor.fetchall()
 
-        # Renvoi du template HTML 'table-data.html' avec les données clients et groupes
-        return render_template('backend/table-data.html', clients=clients, groupes=groupes)
+        # Renvoi du template HTML 'profiles.html' avec les données clients et groupes
+        return render_template('backend/profiles.html', clients=clients, groupes=groupes)
     
     # Si l'utilisateur n'est pas connecté, redirection vers la page de connexion
     return redirect(url_for('login'))
@@ -436,10 +453,16 @@ def taches():
     # Vérification si l'utilisateur est connecté
     if session['loggedin'] == True:
         
-        # Exécution d'une requête SELECT pour récupérer tous les projets
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM projet')
-        projets = cursor.fetchall()
+        if session['categorie'] == "Direction":
+            # Exécution d'une requête SELECT pour récupérer tous les projets
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM projet')
+            projets = cursor.fetchall()
+        else :
+            # Exécution d'une requête SELECT pour récupérer tous les projets
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM projet WHERE categorie = %s', [session['categorie']])
+            projets = cursor.fetchall()
 
         # Exécution d'une requête SELECT pour récupérer tous les groupes
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -451,8 +474,8 @@ def taches():
         cursor.execute('SELECT * FROM tache')
         tache = cursor.fetchall()
         
-        # Renvoi du template HTML 'table-data-2.html' avec les données tache, groupes et projets
-        return render_template('backend/table-data-2.html', tache=tache, groupes=groupes, projets=projets)
+        # Renvoi du template HTML 'taches.html' avec les données tache, groupes et projets
+        return render_template('backend/taches.html', tache=tache, groupes=groupes, projets=projets)
     
     # Si l'utilisateur n'est pas connecté, redirection vers la page de connexion
     return redirect(url_for('login'))
@@ -476,17 +499,17 @@ def ajout_tache():
 
             # Vérification si le champ description et le champ temps sont vides
             if description == "" and temps == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('taches'))
 
             # Vérification si un projet a été sélectionné dans le formulaire
             elif projet_pick == "choix":
-                flash("Merci choisir un projet, si il y a pas de projet disponnible, veuillez en créer ", "danger")
+                flash("Merci de choisir un projet. Si aucun projet n'est disponible, veuillez en créer un ", "danger")
                 return redirect(url_for('taches'))
 
             # Vérification si un groupe a été sélectionné dans le formulaire
             elif groupe_pick == "choix":
-                flash("Merci choisir un groupe, si il y a pas de groupe disponnible, veuillez en créer ", "danger")
+                flash("Merci de choisir un groupe. Si aucun projet n'est disponible, veuillez en créer un ", "danger")
                 return redirect(url_for('taches'))
 
             # Si toutes les vérifications sont validées, insertion des données dans la base de données
@@ -500,18 +523,19 @@ def ajout_tache():
                 cursor.execute('INSERT INTO tache VALUES (NULL, %s, %s, %s, %s, %s, %s)', [description, groupe_pick, projet_pick, projet_id["id"], temps, "En attente"])
                 mysql.connection.commit()
                 
-                flash("Taches ajouter ", "success")
+                flash("Tâche ajoutée ", "success")
 
                 return redirect(url_for('taches'))
                 
         # Si le formulaire est vide, affichage d'un message d'erreur
         elif request.method == 'POST':
             
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
     
     # Si l'utilisateur n'est pas connecté, redirection vers la page de connexion
     return redirect(url_for('login'))
  
+
 # Définition de la route pour voir les groupes
 @app.route('/groupes')
 def groupes():
@@ -546,10 +570,11 @@ def groupes():
 
         
         # Rendu de la page HTML avec les données récupérées
-        return render_template('backend/pages-blank-page.html', l_groupe_1=l_groupe_1, categories=categories)
+        return render_template('backend/groupes.html', l_groupe_1=l_groupe_1, categories=categories)
 
     # Redirection vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
+
 
 # Définition de la route pour voir les catégories
 @app.route('/categories')
@@ -569,7 +594,7 @@ def categories():
         projets = cursor.fetchall()
         
         # Rendu de la page HTML avec les données récupérées
-        return render_template('backend/pages-blank-page3.html', categories=categories, projets=projets)
+        return render_template('backend/categories.html', categories=categories, projets=projets)
 
     # Redirection vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
@@ -599,7 +624,7 @@ def ajout_categorie():
 
             # Si le champ du nom de catégorie est vide, un message d'erreur est affiché
             elif nom_cat == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('categories'))
 
             # Si les conditions ci-dessus sont satisfaites, la nouvelle catégorie est insérée dans la base de données
@@ -613,7 +638,7 @@ def ajout_categorie():
                 
         elif request.method == 'POST':
             
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
     
     return redirect(url_for('login'))
 
@@ -644,7 +669,7 @@ def ajout_groupe():
 
             # Si le champ "nom_groupe" est vide
             elif nom_groupe == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('groupes'))
 
             # Si le groupe n'existe pas et le champ "nom_groupe" est rempli
@@ -655,7 +680,7 @@ def ajout_groupe():
                 mysql.connection.commit()
                 
                 # Message de confirmation de l'ajout du groupe
-                flash("Groupe ajouter ", "success")
+                flash("Groupe ajouté ", "success")
 
                 return redirect(url_for('groupes'))
                 
@@ -663,10 +688,11 @@ def ajout_groupe():
         elif request.method == 'POST':
             
             # Message d'erreur si le champ "nom_groupe" est vide
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
 
     # Redirection vers la page de connexion si la session n'existe pas
     return redirect(url_for('login'))
+
 
 # Définition de la route pour les informations personnelles
 @app.route('/info_pers', methods=['GET', 'POST'])
@@ -709,13 +735,14 @@ def info_pers():
             else: pass
 
             # Afficher un message de succès
-            flash("Modification effectué ", "success")
+            flash("Modification effectuée ", "success")
             
             # Rediriger vers la page du profil modifié
             return redirect(url_for("profile", profile_id=profile_id))
 
     # Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
+
 
 # Définition de la route pour changer le mot de passe
 @app.route('/change_mdp', methods=['GET', 'POST'])
@@ -744,7 +771,7 @@ def change_mdp():
 
             # Si les mots de passe ne correspondent pas
             if new_password != password_repeat:
-                flash("Les mots de passe ne correspond pas ", "danger")
+                flash("Les mots de passe ne correspondent pas ", "danger")
                 return redirect(url_for("profile", profile_id=profile_id))
 
             # Sinon, si les mots de passe correspondent
@@ -756,13 +783,14 @@ def change_mdp():
                 mysql.connection.commit()
 
                 # Affiche un message de confirmation
-                flash("Modification effectué, veuillez vous connecter avec votre nouveau mot de passe le plus vite possible", "success")
+                flash("Modification effectuée. Veuillez vous connecter dès que possible avec votre nouveau mot de passe ", "success")
                 
                 # Redirige l'utilisateur vers la page de son profil
                 return redirect(url_for("profile", profile_id=profile_id))
 
     # Si l'utilisateur n'est pas connecté, redirige-le vers la page de connexion
     return redirect(url_for('login'))
+
 
 # Définition de la route pour les informations des contacts de l'utilisateur
 @app.route('/description', methods=['GET', 'POST'])
@@ -790,6 +818,7 @@ def description():
     # Si l'utilisateur n'est pas connecté, redirige vers la page de connexion
     return redirect(url_for('login'))
 
+
 # Définition de la route pour les informations des contacts de l'utilisateur
 @app.route('/info_contact', methods=['GET', 'POST'])
 def info_contact():
@@ -803,6 +832,7 @@ def info_contact():
             # Récupère les valeurs des champs "telephone" et "email" depuis le formulaire
             telephone = request.form['telephone']
             email = request.form['email']
+            profile_id = request.args.get("profile_id")
 
             # Effectue la mise à jour de la base de données avec les nouvelles valeurs
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -824,13 +854,14 @@ def info_contact():
             else: pass
             
             # Affiche un message de succès
-            flash("Modification effectué ", "success")
+            flash("Modification effectuée ", "success")
             
             # Redirige l'utilisateur vers la page de profil
             return redirect(url_for("profile", profile_id=profile_id))
             
     # Si l'utilisateur n'est pas connecté, redirige vers la page de connexion
     return redirect(url_for('login'))
+
 
 # Définition de la route pour le profile
 @app.route('/profile')
@@ -859,7 +890,7 @@ def profile():
             if compte:
 
                 # On affiche la page de modification de profil avec les informations du profil et les différents groupes disponibles
-                return render_template('app/user-profile-edit.html', compte=compte, groupes=groupes)
+                return render_template('app/profiles-parametres.html', compte=compte, groupes=groupes)
             else:
 
                 # Si le profil n'existe pas dans la base de données, on redirige vers la page de liste des profils
@@ -874,7 +905,7 @@ def profile():
             if compte:
 
                 # On affiche la page de modification de profil avec les informations de l'utilisateur connecté
-                return render_template('app/user-profile-edit.html', compte=compte)
+                return render_template('app/profiles-parametres.html', compte=compte)
             else:
 
                 # Si les informations du profil de l'utilisateur connecté ne sont pas disponibles dans la base de données, on redirige vers la page de liste des profils
@@ -882,6 +913,7 @@ def profile():
         
     # Si l'utilisateur n'est pas connecté, on redirige vers la page de connexion
     return redirect(url_for('login'))
+
 
 # Définition de la route pour ajouté un projet
 @app.route('/ajout_projet', methods=['GET', 'POST'])
@@ -911,12 +943,12 @@ def ajout_projet():
 
             # Si les champs requis ne sont pas remplis, renvoie un message d'erreur
             elif projet == "" or description == "" or echeance == "" or budget == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('projets'))
 
             # Si aucune catégorie n'est sélectionnée, renvoie un message d'erreur
             elif cat_pick == "choix":
-                flash("Merci choisir une catégorie, si il y a pas de catégorie disponnible, veuillez en créer ", "danger")
+                flash("Merci de choisir une catégorie. Si aucune catégorie n'est disponible, veuillez en créer une ", "danger")
                 return redirect(url_for('projets'))
 
             else:
@@ -924,7 +956,7 @@ def ajout_projet():
                 cursor.execute('INSERT INTO projet VALUES (NULL, %s, %s, %s, %s, %s, %s)', (projet, description, cat_pick, echeance, budget, datetime.now().date()))
                 mysql.connection.commit()
                 
-                flash("Projet ajouter ", "success")
+                flash("Projet ajouté ", "success")
 
                 # Redirige vers la page des projets
                 return redirect(url_for('projets'))
@@ -932,10 +964,11 @@ def ajout_projet():
         elif request.method == 'POST':
             
             # Si la requête POST ne contient pas les champs requis, renvoie un message d'erreur
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
     
     # Si l'utilisateur n'est pas connecté, renvoie vers la page de connexion
     return redirect(url_for('login'))
+
 
 # Définition de la route pour ajouté un utilisateur
 @app.route('/ajout_utilisateur', methods=['GET', 'POST'])
@@ -968,12 +1001,12 @@ def ajout_utilisateur():
 
             # Si un champ est manquant, afficher un message d'erreur et rediriger vers la page profiles
             elif username == "" or password == "" or telephone == "" or nom == "" or prenom == "" or email == "":
-                flash("Merci de completer le formulaire ", "danger")
+                flash("Merci de compléter le formulaire ", "danger")
                 return redirect(url_for('profiles'))
 
             # Si aucun groupe n'a été sélectionné, afficher un message d'erreur et rediriger vers la page profiles
             elif groupe_pick == "choix":
-                flash("Merci choisir un groupe, si il y a pas de groupe disponnible, veuillez en créer ", "danger")
+                flash("Merci de choisir un groupe. Si aucun groupe n'est disponible, veuillez en créer un ", "danger")
                 return redirect(url_for('profiles'))
 
             else:
@@ -985,114 +1018,200 @@ def ajout_utilisateur():
                 mysql.connection.commit()
                 
                 # Afficher un message de succès et rediriger vers la page profiles
-                flash("Utilisateur ajouter ", "success")
+                flash("Utilisateur ajouté ", "success")
                 return redirect(url_for('profiles'))
                 
         # Si le formulaire est soumis mais incomplet, afficher un message d'erreur et rediriger vers la page profiles
         elif request.method == 'POST':
-            flash("Merci de completer le formulaire!", "danger")
+            flash("Merci de compléter le formulaire ", "danger")
     
     # Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
     return redirect(url_for('login'))
 
+
 @app.route('/suppresion', methods=['GET', 'POST'])
 def suppresion():
+    # Récupération des paramètres de requête 'objet_id' et 'objet_type' depuis l'URL
     objet_id = request.args.get("objet_id")
     objet_type = request.args.get("objet_type")
+    
+    # Vérification si l'utilisateur est connecté
     if session['loggedin'] == True:
+        # Connexion à la base de données
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        # Suppression en fonction du type d'objet
         if objet_type == "Projet":
+            # Suppression du projet et des tâches associées
             cursor.execute('DELETE FROM projet WHERE id = %s', [objet_id])
             cursor.execute('DELETE FROM tache WHERE id_projet = %s', [objet_id])
+
+            # Validation des modifications dans la base de données
             mysql.connection.commit()
-            flash("Projet ID : "+ objet_id +" supprimer avec succès", "success")
+            # Notification de succès
+            flash(f"{objet_type} ID : {objet_id} supprimé avec succès", "success")
+            # Redirection vers la page appropriée
             return redirect(url_for('projets'))
+
         elif objet_type == "Utilisateur":
+            # Suppression de l'utilisateur
             cursor.execute('DELETE FROM clients WHERE id = %s', [objet_id])
+
+            # Validation des modifications dans la base de données
             mysql.connection.commit()
-            flash("Utilisateur ID : "+ objet_id +" supprimer avec succès", "success")
+            # Notification de succès
+            flash(f"{objet_type} ID : {objet_id} supprimé avec succès", "success")
+            # Redirection vers la page appropriée
             return redirect(url_for('profiles'))
+
         elif objet_type == "Tâche":
+            # Suppression de la tâche
             projet_id = request.args.get("projet_id")
             cursor.execute('DELETE FROM tache WHERE id = %s', [objet_id])
+
+            # Validation des modifications dans la base de données
             mysql.connection.commit()
-            flash("Tâche ID : "+ objet_id +" supprimer avec succès", "success")
+            # Notification de succès
+            flash(f"{objet_type} ID : {objet_id} supprimée avec succès", "success")
+            # Redirection vers la page appropriée
             return redirect(url_for('projet', projet_id=projet_id))
+
         elif objet_type == "Groupe":
+            # Suppression du groupe
             cursor.execute('DELETE FROM groupe WHERE id = %s', [objet_id])
+
+            # Validation des modifications dans la base de données
             mysql.connection.commit()
-            flash("Groupe ID : "+ objet_id +" supprimer avec succès", "success")
+            # Notification de succès
+            flash(f"{objet_type} ID : {objet_id} supprimé avec succès", "success")
+            # Redirection vers la page appropriée
             return redirect(url_for('groupes'))
+
         elif objet_type == "Catégorie":
+            # Suppression de la catégorie
             cursor.execute('DELETE FROM categories WHERE id = %s', [objet_id])
+
+            # Validation des modifications dans la base de données
             mysql.connection.commit()
-            flash("Catégorie ID : "+ objet_id +" supprimer avec succès", "success")
+            # Notification de succès
+            flash(f"{objet_type} ID : {objet_id} supprimée avec succès", "success")
+            # Redirection vers la page appropriée
             return redirect(url_for('categories'))
+
         else:
-            pass
-            
+            return redirect(url_for('login'))
+    
+    # Redirection vers la page de login si l'utilisateur n'est pas connecté
     return redirect(url_for('login'))
+
 
 @app.route('/chat/ajout', methods=['GET', 'POST'])
 def chat_ajout():
+    # Récupération des paramètres de requête 'projet_id' depuis l'URL et du formulaire 'message'
     projet_id = request.args.get("projet_id")
     message = request.form['message']
+    
+    # Vérification si l'utilisateur est connecté
     if session['loggedin'] == True:
+        # Connexion à la base de données
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', (projet_id, session['username'], message, datetime.now()))
+        
+        # Insertion d'un nouveau message dans la table 'conversation'
+        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', 
+                       (projet_id, session['username'], message, datetime.now()))
+        
+        # Validation des modifications dans la base de données
         mysql.connection.commit()
-        show_chat_modal= True
+        
+        # Affichage du modal de chat après la redirection
+        show_chat_modal = True
+        # Redirection vers la page du projet avec le modal de chat affiché
         return redirect(url_for('projet', projet_id=projet_id, show_chat_modal=show_chat_modal))
-    else:      
+    
+    # Redirection vers la page de login si l'utilisateur n'est pas connecté
+    else:
         return redirect(url_for('login'))
+
 
 @socketio.on('message')
 def handle_message(msg):
+    # Récupération des informations du message
     project_id = msg['project_id']
     conversation = msg['conversation']
+    
+    # Vérification si la conversation est vide
     if conversation == "":
         pass
     else:
+        # Connexion à la base de données
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', (project_id, session['username'], conversation, datetime.now()))
+        
+        # Insertion d'un nouveau message dans la table 'conversation'
+        cursor.execute('INSERT INTO conversation VALUES (NULL, %s, %s, %s, %s)', 
+                       (project_id, session['username'], conversation, datetime.now()))
+        
+        # Validation des modifications dans la base de données
         mysql.connection.commit()
+        
+        # Récupération de l'heure actuelle formatée
         time = datetime.now().strftime("%H:%M %d/%m/%Y")
-        socketio.emit('new_message', {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 'project_id': project_id, 'is_current_user': True}, room=request.sid)
-        emit_to_others = {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 'project_id': project_id, 'is_current_user': False}
+        
+        # Emission d'un nouveau message à l'utilisateur actuel
+        socketio.emit('new_message', 
+                      {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 
+                       'project_id': project_id, 'is_current_user': True}, 
+                      room=request.sid)
+        
+        # Préparation du message à envoyer aux autres utilisateurs
+        emit_to_others = {'time': time, 'utilisateur': session['username'], 'conversation': conversation, 
+                          'project_id': project_id, 'is_current_user': False}
+        
+        # Emission du nouveau message aux autres utilisateurs dans la salle du projet, sauf l'utilisateur actuel
         socketio.emit('new_message', emit_to_others, room=f"project_{project_id}", skip_sid=request.sid)
+
 
 @socketio.on('connect')
 def handle_connect():
+    # Récupération de l'identifiant du projet sélectionné depuis la session
     project_id = session.get('projet_select')
+    
     if project_id is not None:
+        # Création du nom de la salle de discussion pour le projet
         room_name = f"project_{project_id}"
+        
+        # Ajout de l'utilisateur à la salle de discussion du projet
         join_room(room_name)
+        
+        # Vérification si la conversation du projet a déjà été chargée pour cette session
         if session.get(room_name) is None:
+            # Connexion à la base de données
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            
+            # Récupération de l'historique des messages de la conversation du projet
             cursor.execute("SELECT * FROM conversation WHERE id_projet = %s", [project_id])
             conversation = cursor.fetchall()
-
+            
+            # Envoi de chaque message de l'historique à l'utilisateur connecté
             for message in conversation:
-                if session['username'] == message['utilisateur']:
-                    socketio.emit('new_message', {
-                        'time': message['date'].strftime("%H:%M %d/%m/%Y"),
-                        'utilisateur': message['utilisateur'],
-                        'conversation': message['message'],
-                        'project_id': project_id,
-                        'is_current_user': True
-                    }, room=request.sid) 
-                else:
-                    socketio.emit('new_message', {
-                        'time': message['date'].strftime("%H:%M %d/%m/%Y"),
-                        'utilisateur': message['utilisateur'],
-                        'conversation': message['message'],
-                        'project_id': project_id,
-                        'is_current_user': False
-                    }, room=request.sid) 
+                # Formatage de la date et de l'heure du message
+                time = message['date'].strftime("%H:%M %d/%m/%Y")
+                
+                # Détermination si l'utilisateur actuel est l'auteur du message
+                is_current_user = (session['username'] == message['utilisateur'])
+                
+                # Emission du message à l'utilisateur connecté
+                socketio.emit('new_message', {
+                    'time': time,
+                    'utilisateur': message['utilisateur'],
+                    'conversation': message['message'],
+                    'project_id': project_id,
+                    'is_current_user': is_current_user
+                }, room=request.sid)
+            
+            # Marquage dans la session que la conversation du projet a été chargée
             session[room_name] = True
         
         
-
 # Définition de la route pour se déconnecté
 @app.route('/deconnexion')
 def deconnexion():
@@ -1105,6 +1224,7 @@ def deconnexion():
 
     # Redirige vers la page de connexion
     return redirect(url_for('login'))
+
 
 if __name__ =='__main__':
     # Démarre l'application Flask en mode debug
